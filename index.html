@@ -758,26 +758,20 @@ textarea { resize: none; height: 72px; line-height: 1.5; }
 
     <!-- 封面（左）+ 演出名 & 艺人（右） -->
     <div class="add-hero">
-      <div style="width:140px;flex-shrink:0;display:flex;flex-direction:column;gap:0;">
-        <!-- 预览图：选完后显示 -->
-        <img id="cover-preview" alt=""
-          style="display:none;width:140px;height:186px;object-fit:cover;border-radius:12px;margin-bottom:6px;">
-        <!-- 占位框：未选时显示 -->
-        <div id="cover-ph-box"
-          style="width:140px;height:186px;border-radius:12px;background:#F2F2F7;
-                 display:flex;flex-direction:column;align-items:center;justify-content:center;
-                 gap:6px;margin-bottom:6px;">
+      <div style="width:140px;flex-shrink:0;position:relative;height:186px;border-radius:12px;overflow:hidden;background:#F2F2F7;cursor:pointer;" onclick="document.getElementById('cover-file').click()">
+        <!-- 占位内容 -->
+        <div id="cover-ph-box" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;pointer-events:none;">
           <svg viewBox="0 0 24 24" width="32" height="32" stroke="#C7C7CC" fill="none" stroke-width="1.5" stroke-linecap="round">
             <rect x="3" y="3" width="18" height="18" rx="3"/>
             <circle cx="8.5" cy="8.5" r="1.5"/>
             <polyline points="21 15 16 10 5 21"/>
           </svg>
-          <span style="font-size:11px;font-weight:600;color:#C7C7CC;">点下方按钮选封面</span>
+          <span style="font-size:11px;font-weight:600;color:#C7C7CC;">选封面</span>
         </div>
-        <!-- 真正的 input，直接显示，iOS Safari 100% 支持 -->
-        <input type="file" id="cover-file" accept="image/*"
-          style="width:140px;font-size:13px;color:#4CAF50;"
-          onchange="onCoverPick(event)">
+        <!-- 预览图 -->
+        <img id="cover-preview" alt="" style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">
+        <!-- 隐藏input -->
+        <input type="file" id="cover-file" accept="image/*" style="display:none;" onchange="onCoverPick(event)">
       </div>
       <div class="hero-fields">
         <div class="hero-field-label">演出名称</div>
@@ -1400,13 +1394,18 @@ function setType(btn) {
 function onCoverPick(e) {
   const file = e.target.files && e.target.files[0];
   if(!file) return;
+  // Use FileReader to get base64 for storage
   const reader = new FileReader();
   reader.onload = ev => {
     addCover = ev.target.result;
-    document.getElementById('cover-preview').src = addCover;
-    document.getElementById('cover-preview').style.display = 'block';
-    document.getElementById('cover-ph-box').style.display = 'none';
+    const img = document.getElementById('cover-preview');
+    img.onload = () => {
+      img.style.display = 'block';
+      document.getElementById('cover-ph-box').style.display = 'none';
+    };
+    img.src = addCover;
   };
+  reader.onerror = () => showToast('图片读取失败，请重试');
   reader.readAsDataURL(file);
 }
 function addRecord() {
